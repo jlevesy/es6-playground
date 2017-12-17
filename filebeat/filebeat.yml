@@ -1,0 +1,16 @@
+filebeat.prospectors:
+- input_type: log
+  paths:
+    - /data/*.csv
+
+  # Ignore the first line with column headings
+  exclude_lines: ["^Restaurant Name,"]
+
+  # Identifies the last two columns as the end of an entry and then prepends the previous lines to it
+  multiline.pattern: ',\d+,[^\",]+$'
+  multiline.negate: true
+  multiline.match: before
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  pipeline: "testpipeline"

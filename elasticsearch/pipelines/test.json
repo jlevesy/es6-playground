@@ -1,0 +1,50 @@
+{
+  "description" : "Convert Restaurant inspections csv data to indexed data",
+  "processors" : [
+    {
+      "grok": {
+        "field": "message",
+        "patterns": ["%{REST_NAME:RestaurantName},%{REST_ZIP:ZipCode},%{MONTHNUM2:InspectionMonth}/%{MONTHDAY:InspectionDay}/%{YEAR:InspectionYear},%{NUMBER:Score},\"%{DATA:StreetAddress}\n%{DATA:City},?\\s+%{WORD:State}\\s*%{NUMBER:ZipCode2}\\s*\n\\(?%{DATA:Location}\\)?\",%{NUMBER:FacilityID},%{DATA:InspectionType}$"],
+        "pattern_definitions": {
+          "REST_NAME": "%{DATA}|%{QUOTEDSTRING}",
+          "REST_ZIP": "%{QUOTEDSTRING}|%{NUMBER}"
+        }
+      }
+    },
+    {
+      "grok": {
+        "field": "ZipCode",
+        "patterns": [".*%{ZIP:ZipCode}\"?$"],
+        "pattern_definitions": {
+          "ZIP": "\\d{5}"
+        }
+      }
+    },
+    {
+      "convert": {
+        "field" : "Score",
+        "type": "integer"
+      }
+    },
+    {
+      "set": {
+        "field" : "@timestamp",
+        "value" : "//"
+      }
+    },
+    {
+      "date" : {
+        "field" : "@timestamp",
+        "formats" : ["yyyy/MM/dd"]
+      }
+    }
+  ],
+  "on_failure" : [
+    {
+      "set" : {
+        "field" : "error",
+        "value" : " - Error processing message - "
+      }
+    }
+  ]
+}
